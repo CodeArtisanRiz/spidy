@@ -5,40 +5,55 @@ import { Stars, Float, MeshDistortMaterial } from '@react-three/drei'
 import * as THREE from 'three'
 import './App.css'
 
-// Spiderman character data with images
-const SPIDER_VERSE_CHARACTERS = [
+// Spider-Verse Heroes with themed images
+const HEROES = [
   {
     id: 'peter-classic',
     name: 'Peter Parker',
-    alias: 'Classic Spider-Man',
+    alias: 'Spider-Man',
     universe: 'Earth-616',
     image: 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=600&h=800&fit=crop',
     color: '#E23636',
-    description: 'The original web-slinger. Bitten by a radioactive spider, Peter Parker became the hero we all know and love.',
-    powers: ['Web-Shooters', 'Spider-Sense', 'Wall-Crawling', 'Super Strength'],
+    description: 'Your friendly neighborhood Spider-Man. Bitten by a radioactive spider, Peter Parker has been protecting New York for over 60 years.',
+    powers: ['Web-Shooters', 'Spider-Sense', 'Wall-Crawling', 'Super Strength', 'Agility'],
     firstAppearance: 'Amazing Fantasy #15 (1962)',
+    actor: 'Tom Holland / Andrew Garfield / Tobey Maguire'
   },
   {
     id: 'miles',
     name: 'Miles Morales',
-    alias: 'Ultimate Spider-Man',
+    alias: 'Spider-Man',
     universe: 'Earth-1610',
     image: 'https://images.unsplash.com/photo-1604200213928-ba3cf4fc8ef1?w=600&h=800&fit=crop',
     color: '#000000',
-    description: 'A teenager from Brooklyn who was bitten by a radioactive spider from Oscorp. He has electric venom sting and camouflage abilities.',
-    powers: ['Bio-Electricity', 'Camouflage', 'Venom Blast', 'Spider-Camouflage'],
+    description: 'A Brooklyn teenager with bio-electricity powers and the ability to camouflage. The star of Into the Spider-Verse.',
+    powers: ['Bio-Electricity', 'Camouflage', 'Venom Blast', 'Spider-Sense', 'Wall-Crawling'],
     firstAppearance: 'Ultimate Fallout #4 (2011)',
+    actor: 'Shameik Moore (Voice)'
   },
   {
     id: 'gwen',
     name: 'Gwen Stacy',
-    alias: 'Spider-Gwen',
+    alias: 'Spider-Woman',
     universe: 'Earth-65',
     image: 'https://images.unsplash.com/photo-1535295972055-1c762f4483e5?w=600&h=800&fit=crop',
     color: '#FF1493',
-    description: 'In her universe, Gwen was bitten by the radioactive spider instead of Peter. She uses web-shooters and drums in a band.',
-    powers: ['Web-Shooters', 'Spider-Sense', 'Wall-Crawling', 'Musical Talent'],
+    description: 'In her dimension, Gwen was bitten by the radioactive spider. A drummer in a band and a fearless web-slinger.',
+    powers: ['Web-Shooters', 'Spider-Sense', 'Wall-Crawling', 'Ballet Fighting Style'],
     firstAppearance: 'Edge of Spider-Verse #2 (2014)',
+    actor: 'Hailee Steinfeld (Voice)'
+  },
+  {
+    id: 'peter-b',
+    name: 'Peter B. Parker',
+    alias: 'Spider-Man Noir',
+    universe: 'Earth-90214',
+    image: 'https://images.unsplash.com/photo-1509347528160-9a9e33742cdb?w=600&h=800&fit=crop',
+    color: '#1a1a1a',
+    description: 'A gritty 1930s detective version of Spider-Man. Uses guns and has a much darker approach to justice.',
+    powers: ['Web-Shooters', 'Stealth', 'Marksmanship', 'Enhanced Senses'],
+    firstAppearance: 'Spider-Man Noir #1 (2009)',
+    actor: 'Nicolas Cage (Voice)'
   },
   {
     id: 'ham',
@@ -47,20 +62,10 @@ const SPIDER_VERSE_CHARACTERS = [
     universe: 'Earth-8311',
     image: 'https://images.unsplash.com/photo-1560807707-8cc77767d783?w=600&h=800&fit=crop',
     color: '#FF6B6B',
-    description: 'A spider bitten by a radioactive pig who became a porcine parody of Spider-Man. Yes, this is real and amazing!',
-    powers: ['Cartoon Physics', 'Mallet Space', 'Toon Force', 'Pork Sense'],
+    description: 'A spider that was bitten by a radioactive pig. A cartoon character with toon physics and infinite mallet space.',
+    powers: ['Cartoon Physics', 'Toon Force', 'Mallet Space', 'Pork Sense'],
     firstAppearance: 'Marvel Tails #1 (1983)',
-  },
-  {
-    id: ' Noir',
-    name: 'Peter Parker',
-    alias: 'Spider-Man Noir',
-    universe: 'Earth-90214',
-    image: 'https://images.unsplash.com/photo-1509347528160-9a9e33742cdb?w=600&h=800&fit=crop',
-    color: '#1a1a1a',
-    description: 'A 1930s version of Spider-Man operating during the Great Depression. Uses guns and has a much darker tone.',
-    powers: ['Web-Shooters', 'Enhanced Agility', 'Marksmanship', 'Stealth'],
-    firstAppearance: 'Spider-Man Noir #1 (2009)',
+    actor: 'John Mulaney (Voice)'
   },
   {
     id: 'peni',
@@ -69,34 +74,65 @@ const SPIDER_VERSE_CHARACTERS = [
     universe: 'Earth-14512',
     image: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&h=800&fit=crop',
     color: '#FF4081',
-    description: 'A Japanese-American girl who pilots a spider-mech suit powered by a radioactive spider with whom she shares a psychic link.',
-    powers: ['Mech Suit', 'Psychic Link', 'Advanced Tech', 'Acrobatics'],
+    description: 'A 14-year-old Japanese-American pilot who bonds with a radioactive spider to control a giant mech suit.',
+    powers: ['Mech Suit', 'Psychic Link', 'Advanced Technology', 'Neural Interface'],
     firstAppearance: 'Edge of Spider-Verse #5 (2014)',
+    actor: 'Kimiko Glenn (Voice)'
   },
 ]
 
-// Movie gallery data
-const MOVIES = [
-  { id: 1, title: 'Spider-Man (2002)', rating: 'PG-13', image: 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=800&h=450&fit=crop', director: 'Sam Raimi', year: 2002 },
-  { id: 2, title: 'Spider-Man 2 (2004)', rating: 'PG-13', image: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=800&h=450&fit=crop', director: 'Sam Raimi', year: 2004 },
-  { id: 3, title: 'Spider-Man 3 (2007)', rating: 'PG-13', image: 'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=800&h=450&fit=crop', director: 'Sam Raimi', year: 2007 },
-  { id: 4, title: 'The Amazing Spider-Man', rating: 'PG-13', image: 'https://images.unsplash.com/photo-1560167016-022b78a0258e?w=800&h=450&fit=crop', director: 'Marc Webb', year: 2012 },
-  { id: 5, title: 'Spider-Man: Homecoming', rating: 'PG-13', image: 'https://images.unsplash.com/photo-1563089145-599997674d42?w=800&h=450&fit=crop', director: 'Jon Watts', year: 2017 },
-  { id: 6, title: 'Spider-Verse (2018)', rating: 'PG', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&h=450&fit=crop', director: 'Bob Persichetti', year: 2018 },
-  { id: 7, title: 'Far From Home (2019)', rating: 'PG-13', image: 'https://images.unsplash.com/photo-1518676590629-3dcbd9c5a5c9?w=800&h=450&fit=crop', director: 'Jon Watts', year: 2019 },
-  { id: 8, title: 'No Way Home (2021)', rating: 'PG-13', image: 'https://images.unsplash.com/photo-1535016120720-40c6874c3b13?w=800&h=450&fit=crop', director: 'Jon Watts', year: 2021 },
+// Villains
+const VILLAINS = [
+  {
+    id: 'kingpin',
+    name: 'Wilson Fisk',
+    alias: 'Kingpin',
+    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=700&fit=crop',
+    color: '#FFFFFF',
+    description: 'The criminal mastermind of New York. Immense strength and brilliant mind make him Spider-Man\'s most dangerous foe.',
+    threat: 'Extreme',
+    firstAppearance: 'The Amazing Spider-Man #50 (1967)'
+  },
+  {
+    id: 'goblin',
+    name: 'Norman Osborn',
+    alias: 'Green Goblin',
+    image: 'https://images.unsplash.com/photo-1598528882254-424ed83d397b?w=600&h=700&fit=crop',
+    color: '#00FF00',
+    description: 'The original and most personal villain. Enhanced strength, insane intelligence, and deadly pumpkin bombs.',
+    threat: 'Critical',
+    firstAppearance: 'The Amazing Spider-Man #14 (1964)'
+  },
+  {
+    id: 'doc-ock',
+    name: 'Otto Octavius',
+    alias: 'Doctor Octopus',
+    image: 'https://images.unsplash.com/photo-1534423861386-85a16f5d13fd?w=600&h=700&fit=crop',
+    color: '#4169E1',
+    description: 'Brilliant scientist with four mechanical tentacles fused to his body. Nearly killed Spider-Man multiple times.',
+    threat: 'High',
+    firstAppearance: 'The Amazing Spider-Man #3 (1963)'
+  },
+  {
+    id: 'venom',
+    name: 'Eddie Brock',
+    alias: 'Venom',
+    image: 'https://images.unsplash.com/photo-1509281373149-e957c6296406?w=600&h=700&fit=crop',
+    color: '#000000',
+    description: 'An alien symbiote that gives its host all Spider-Man\'s powers plus shape-shifting and near-invulnerability.',
+    threat: 'Critical',
+    firstAppearance: 'The Amazing Spider-Man #300 (1988)'
+  },
 ]
 
-// Comic book covers gallery
-const COMIC_COVERS = [
-  { id: 1, title: 'Amazing Fantasy #15', year: 1962, image: 'https://images.unsplash.com/photo-1588497859490-85d1c17db96d?w=400&h=600&fit=crop' },
-  { id: 2, title: 'The Amazing Spider-Man #1', year: 1963, image: 'https://images.unsplash.com/photo-1612036782180-6f0b6cd846fe?w=400&h=600&fit=crop' },
-  { id: 3, title: 'The Night Gwen Stacy Died', year: 1973, image: 'https://images.unsplash.com/photo-1618519764620-7403abdbdfe9?w=400&h=600&fit=crop' },
-  { id: 4, title: 'Secret Wars #8', year: 1984, image: 'https://images.unsplash.com/photo-1601645191163-3fc0d5d64e35?w=400&h=600&fit=crop' },
-  { id: 5, title: 'Spider-Man #1 (Todd McFarlane)', year: 1990, image: 'https://images.unsplash.com/photo-1624213111452-35e8d3d5cc18?w=400&h=600&fit=crop' },
-  { id: 6, title: 'Ultimate Spider-Man #1', year: 2000, image: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=400&h=600&fit=crop' },
-  { id: 7, title: 'Superior Spider-Man #1', year: 2013, image: 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=400&h=600&fit=crop' },
-  { id: 8, title: 'Spider-Gwen #1', year: 2015, image: 'https://images.unsplash.com/photo-1535295972055-1c762f4483e5?w=400&h=600&fit=crop' },
+// Movies
+const MOVIES = [
+  { id: 1, title: 'Into the Spider-Verse', year: 2018, rating: 'PG', image: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=800&h=450&fit=crop', director: 'Bob Persichetti', quote: 'What makes you different is what makes you Spider-Man' },
+  { id: 2, title: 'Spider-Man (2002)', year: 2002, rating: 'PG-13', image: 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=800&h=450&fit=crop', director: 'Sam Raimi', quote: 'With great power comes great responsibility' },
+  { id: 3, title: 'Spider-Man 2', year: 2004, rating: 'PG-13', image: 'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=800&h=450&fit=crop', director: 'Sam Raimi', quote: 'Sometimes to do what\'s right, we have to be steady' },
+  { id: 4, title: 'No Way Home', year: 2021, rating: 'PG-13', image: 'https://images.unsplash.com/photo-1535016120720-40c6874c3b13?w=800&h=450&fit=crop', director: 'Jon Watts', quote: 'The multiverse is real' },
+  { id: 5, title: 'Across the Spider-Verse', year: 2023, rating: 'PG', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&h=450&fit=crop', director: 'Joaquim Dos Santos', quote: 'I can\'t lose one more friend!' },
+  { id: 6, title: 'Homecoming', year: 2017, rating: 'PG-13', image: 'https://images.unsplash.com/photo-1563089145-599997674d42?w=800&h=450&fit=crop', director: 'Jon Watts', quote: 'I\'m just a friendly neighborhood Spider-Man' },
 ]
 
 // 3D Background Component
@@ -152,8 +188,59 @@ function MouseGlow() {
   return <motion.div className="fixed inset-0 pointer-events-none z-0" style={{ background }} />
 }
 
-// Character Card with 3D tilt effect
-function CharacterCard({ character, onClick, isSelected }: { character: typeof SPIDER_VERSE_CHARACTERS[0], onClick: () => void, isSelected: boolean }) {
+// Animated Web Line
+function WebLine({ delay }: { delay: number }) {
+  return (
+    <motion.div
+      className="absolute bg-gradient-to-b from-transparent via-white/20 to-transparent"
+      style={{
+        width: '2px',
+        height: '100vh',
+        left: `${Math.random() * 100}%`,
+      }}
+      initial={{ scaleY: 0, opacity: 0 }}
+      animate={{ scaleY: 1, opacity: [0, 0.5, 0] }}
+      transition={{
+        duration: 3,
+        delay,
+        repeat: Infinity,
+        repeatDelay: Math.random() * 5,
+      }}
+    />
+  )
+}
+
+// Spider Icon Component
+function SpiderIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={`spider-spin ${className}`} viewBox="0 0 100 100" width="60" height="60">
+      <defs>
+        <linearGradient id="spiderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#E23636" />
+          <stop offset="100%" stopColor="#2B378C" />
+        </linearGradient>
+      </defs>
+      <ellipse cx="50" cy="50" rx="12" ry="15" fill="url(#spiderGrad)" />
+      <g stroke="#E23636" strokeWidth="3" fill="none" strokeLinecap="round">
+        <path d="M40 40 Q 20 25, 10 30" />
+        <path d="M45 35 Q 30 10, 20 15" />
+        <path d="M55 35 Q 70 10, 80 15" />
+        <path d="M60 40 Q 80 25, 90 30" />
+        <path d="M40 60 Q 20 75, 10 70" />
+        <path d="M45 65 Q 30 90, 20 85" />
+        <path d="M55 65 Q 70 90, 80 85" />
+        <path d="M60 60 Q 80 75, 90 70" />
+      </g>
+      <ellipse cx="46" cy="45" rx="3" ry="4" fill="white" />
+      <ellipse cx="54" cy="45" rx="3" ry="4" fill="white" />
+      <circle cx="46" cy="45" r="1.5" fill="black" />
+      <circle cx="54" cy="45" r="1.5" fill="black" />
+    </svg>
+  )
+}
+
+// 3D Tilt Card
+function TiltCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   const x = useMotionValue(0)
   const y = useMotionValue(0)
   const rotateX = useTransform(y, [-100, 100], [10, -10])
@@ -174,24 +261,34 @@ function CharacterCard({ character, onClick, isSelected }: { character: typeof S
 
   return (
     <motion.div
-      className="relative cursor-pointer"
+      className={className}
       style={{ perspective: 1000 }}
-      onClick={onClick}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      whileHover={{ scale: 1.02, zIndex: 10 }}
-      layoutId={`character-${character.id}`}
     >
       <motion.div
-        className="relative overflow-hidden rounded-xl bg-gray-900 border-4"
         style={{
-          borderColor: character.color,
           rotateX,
           rotateY,
           transformStyle: 'preserve-3d',
         }}
       >
-        {/* Character Image */}
+        {children}
+      </motion.div>
+    </motion.div>
+  )
+}
+
+// Character Card
+function CharacterCard({ character, onClick, isSelected }: { character: typeof HEROES[0]; onClick: () => void; isSelected: boolean }) {
+  return (
+    <TiltCard className="cursor-pointer" onClick={onClick}>
+      <motion.div
+        className="relative overflow-hidden rounded-xl bg-gray-900 border-4"
+        style={{ borderColor: character.color }}
+        whileHover={{ scale: 1.02 }}
+        layoutId={`character-${character.id}`}
+      >
         <div className="relative h-80 overflow-hidden">
           <motion.img
             src={character.image}
@@ -200,20 +297,15 @@ function CharacterCard({ character, onClick, isSelected }: { character: typeof S
             whileHover={{ scale: 1.1 }}
             transition={{ duration: 0.4 }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
 
-          {/* Universe badge */}
           <motion.div
             className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold"
             style={{ backgroundColor: character.color, color: 'white' }}
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2 }}
           >
             {character.universe}
           </motion.div>
 
-          {/* Glow effect on hover */}
           <motion.div
             className="absolute inset-0 opacity-0"
             whileHover={{ opacity: 1 }}
@@ -223,47 +315,88 @@ function CharacterCard({ character, onClick, isSelected }: { character: typeof S
           />
         </div>
 
-        {/* Character Info */}
         <div className="p-6">
           <h3 className="text-2xl font-bold mb-1" style={{ color: character.color, fontFamily: 'Bangers' }}>
             {character.alias}
           </h3>
           <p className="text-gray-400 text-sm mb-3">{character.name}</p>
 
-          {/* Powers pills */}
           <div className="flex flex-wrap gap-2">
             {character.powers.slice(0, 3).map((power, idx) => (
-              <motion.span
+              <span
                 key={power}
                 className="px-2 py-1 text-xs rounded-full border"
                 style={{ borderColor: character.color, color: character.color }}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.1 }}
               >
                 {power}
-              </motion.span>
+              </span>
             ))}
           </div>
         </div>
 
-        {/* Selection indicator */}
         {isSelected && (
           <motion.div
             className="absolute inset-0 border-4 border-white rounded-xl"
             layoutId="selection-indicator"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
           />
         )}
       </motion.div>
-    </motion.div>
+    </TiltCard>
   )
 }
 
-// Movie poster with hover effects
-function MoviePoster({ movie, index }: { movie: typeof MOVIES[0], index: number }) {
+// Villain Card
+function VillainCard({ villain }: { villain: typeof VILLAINS[0] }) {
+  return (
+    <TiltCard>
+      <motion.div
+        className="relative overflow-hidden rounded-xl bg-gray-900 cursor-pointer"
+        whileHover={{ scale: 1.02 }}
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+      >
+        <div className="relative h-72 overflow-hidden">
+          <motion.img
+            src={villain.image}
+            alt={villain.alias}
+            className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+
+          <motion.div
+            className="absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-bold"
+            style={{
+              backgroundColor: villain.threat === 'Critical' ? '#DC2626' : villain.threat === 'Extreme' ? '#7C3AED' : '#F59E0B',
+              color: 'white'
+            }}
+          >
+            {villain.threat} THREAT
+          </motion.div>
+        </div>
+
+        <div className="p-6">
+          <h3 className="text-2xl font-bold mb-1" style={{ color: villain.color, fontFamily: 'Bangers' }}>
+            {villain.alias}
+          </h3>
+          <p className="text-gray-500 text-sm mb-2">{villain.name}</p>
+          <p className="text-gray-400 text-sm line-clamp-2">{villain.description}</p>
+        </div>
+
+        <motion.div
+          className="absolute bottom-0 left-0 right-0 h-1"
+          style={{ backgroundColor: villain.color }}
+          initial={{ scaleX: 0 }}
+          whileHover={{ scaleX: 1 }}
+          transition={{ duration: 0.3 }}
+        />
+      </motion.div>
+    </TiltCard>
+  )
+}
+
+// Movie Card
+function MovieCard({ movie, index }: { movie: typeof MOVIES[0]; index: number }) {
   const [isHovered, setIsHovered] = useState(false)
 
   return (
@@ -277,7 +410,6 @@ function MoviePoster({ movie, index }: { movie: typeof MOVIES[0], index: number 
       onMouseLeave={() => setIsHovered(false)}
     >
       <div className="relative overflow-hidden rounded-lg bg-gray-900">
-        {/* Poster Image */}
         <motion.img
           src={movie.image}
           alt={movie.title}
@@ -286,27 +418,29 @@ function MoviePoster({ movie, index }: { movie: typeof MOVIES[0], index: number 
           transition={{ duration: 0.4 }}
         />
 
-        {/* Overlay */}
         <motion.div
-          className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"
-          initial={{ opacity: 0 }}
+          className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent"
+          initial={{ opacity: 0.5 }}
           animate={{ opacity: isHovered ? 1 : 0.7 }}
         />
 
-        {/* Content */}
         <div className="absolute inset-0 p-4 flex flex-col justify-end">
+          <motion.p
+            className="text-yellow-400 text-xs mb-1"
+            animate={{ opacity: isHovered ? 1 : 0 }}
+          >
+            "{movie.quote}"
+          </motion.p>
           <motion.h3
             className="text-xl font-bold mb-1"
             style={{ fontFamily: 'Bangers' }}
-            animate={{ y: isHovered ? 0 : 10, opacity: isHovered ? 1 : 0.8 }}
+            animate={{ y: isHovered ? 0 : 5 }}
           >
             {movie.title}
           </motion.h3>
-
           <motion.div
-            className="flex items-center gap-3 text-sm text-gray-300"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 20 }}
+            className="flex items-center gap-2 text-sm text-gray-300"
+            animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 10 }}
           >
             <span>{movie.year}</span>
             <span className="w-1 h-1 bg-red-500 rounded-full" />
@@ -315,65 +449,10 @@ function MoviePoster({ movie, index }: { movie: typeof MOVIES[0], index: number 
           </motion.div>
         </div>
 
-        {/* Spider web corner decoration */}
         <svg className="absolute top-0 right-0 w-24 h-24 opacity-30" viewBox="0 0 100 100">
           <path d="M100 0 L0 100 M100 20 L20 100 M100 40 L40 100 M100 60 L60 100 M100 80 L80 100" stroke="#E23636" strokeWidth="1" fill="none" />
         </svg>
       </div>
-    </motion.div>
-  )
-}
-
-// Comic cover with 3D flip
-function ComicCover({ comic, index }: { comic: typeof COMIC_COVERS[0], index: number }) {
-  const [isFlipped, setIsFlipped] = useState(false)
-
-  return (
-    <motion.div
-      className="relative cursor-pointer"
-      style={{ perspective: 1000 }}
-      initial={{ opacity: 0, rotateY: -90 }}
-      whileInView={{ opacity: 1, rotateY: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay: index * 0.1, type: 'spring' }}
-      onClick={() => setIsFlipped(!isFlipped)}
-    >
-      <motion.div
-        className="relative w-full aspect-[2/3] rounded-lg overflow-hidden shadow-2xl"
-        animate={{ rotateY: isFlipped ? 180 : 0 }}
-        transition={{ duration: 0.6 }}
-        style={{ transformStyle: 'preserve-3d' }}
-      >
-        {/* Front */}
-        <div className="absolute inset-0 backface-hidden">
-          <img src={comic.image} alt={comic.title} className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-          <div className="absolute bottom-0 left-0 right-0 p-4">
-            <p className="text-yellow-400 text-xs font-bold">{comic.year}</p>
-            <h4 className="text-white font-bold text-sm" style={{ fontFamily: 'Bangers' }}>{comic.title}</h4>
-          </div>
-        </div>
-
-        {/* Back */}
-        <div
-          className="absolute inset-0 bg-gradient-to-br from-red-600 to-blue-800 p-4 flex flex-col items-center justify-center text-center"
-          style={{ transform: 'rotateY(180deg)', backfaceVisibility: 'hidden' }}
-        >
-          <span className="text-4xl mb-4">🕷️</span>
-          <p className="text-white text-sm">Click to view details</p>
-          <p className="text-yellow-300 text-xs mt-2">Rare Edition</p>
-        </div>
-      </motion.div>
-
-      {/* Shine effect */}
-      <motion.div
-        className="absolute inset-0 rounded-lg pointer-events-none"
-        style={{
-          background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.2) 45%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0.2) 55%, transparent 60%)',
-        }}
-        animate={{ x: isFlipped ? '200%' : '-200%' }}
-        transition={{ duration: 0.6 }}
-      />
     </motion.div>
   )
 }
@@ -409,7 +488,6 @@ function InteractiveWeb({ mousePos }: { mousePos: { x: number, y: number } }) {
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-      // Update points
       points.forEach((point, i) => {
         point.x += point.vx
         point.y += point.vy
@@ -417,7 +495,6 @@ function InteractiveWeb({ mousePos }: { mousePos: { x: number, y: number } }) {
         if (point.x < 0 || point.x > canvas.width) point.vx *= -1
         if (point.y < 0 || point.y > canvas.height) point.vy *= -1
 
-        // Mouse attraction
         const dx = mousePos.x - point.x
         const dy = mousePos.y - point.y
         const dist = Math.sqrt(dx * dx + dy * dy)
@@ -426,13 +503,11 @@ function InteractiveWeb({ mousePos }: { mousePos: { x: number, y: number } }) {
           point.vy += dy * 0.0001
         }
 
-        // Draw point
         ctx.beginPath()
         ctx.arc(point.x, point.y, 2, 0, Math.PI * 2)
         ctx.fillStyle = 'rgba(226, 54, 54, 0.6)'
         ctx.fill()
 
-        // Draw connections
         points.slice(i + 1).forEach((other) => {
           const d = Math.sqrt((point.x - other.x) ** 2 + (point.y - other.y) ** 2)
           if (d < 150) {
@@ -499,17 +574,15 @@ function Lightbox({ image, title, onClose }: { image: string, title: string, onC
 // Main App Component
 function App() {
   const [loading, setLoading] = useState(true)
-  const [selectedCharacter, setSelectedCharacter] = useState<typeof SPIDER_VERSE_CHARACTERS[0] | null>(null)
+  const [selectedCharacter, setSelectedCharacter] = useState<typeof HEROES[0] | null>(null)
   const [lightboxImage, setLightboxImage] = useState<{ image: string, title: string } | null>(null)
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
-  const [activeSection, setActiveSection] = useState('heroes')
   const containerRef = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({ target: containerRef })
 
   const springConfig = { stiffness: 100, damping: 30, restDelta: 0.001 }
   const scaleX = useSpring(scrollYProgress, springConfig)
 
-  // Scroll-based transforms
   const y1 = useTransform(scrollYProgress, [0, 1], [0, -300])
   const y2 = useTransform(scrollYProgress, [0, 1], [0, -500])
   const rotate = useTransform(scrollYProgress, [0, 1], [0, 360])
@@ -530,14 +603,19 @@ function App() {
   if (loading) {
     return (
       <div className="loading-screen">
-        <div className="spider-loader" />
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+        >
+          <SpiderIcon className="w-24 h-24" />
+        </motion.div>
         <motion.p
           className="absolute mt-32 text-2xl font-bold"
           style={{ fontFamily: 'Bangers', color: '#E23636' }}
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ duration: 1.5, repeat: Infinity }}
         >
-          ASSEMBLING THE SPIDER-VERSE...
+          SWINGING INTO THE SPIDER-VERSE...
         </motion.p>
       </div>
     )
@@ -557,6 +635,13 @@ function App() {
       {/* Interactive Web Background */}
       <InteractiveWeb mousePos={mousePos} />
 
+      {/* Animated Web Lines */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        {[...Array(5)].map((_, i) => (
+          <WebLine key={i} delay={i * 0.5} />
+        ))}
+      </div>
+
       {/* 3D Canvas Background */}
       <div className="fixed inset-0 z-[-2]">
         <Canvas camera={{ position: [0, 0, 5], fov: 75 }}>
@@ -564,7 +649,7 @@ function App() {
         </Canvas>
       </div>
 
-      {/* Hero Section */}
+      {/* Hero Section - Restored Better Version */}
       <section className="relative min-h-screen flex items-center justify-center px-4">
         <motion.div
           className="text-center z-10"
@@ -572,28 +657,12 @@ function App() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, ease: 'easeOut' }}
         >
-          {/* Animated Spider Logo */}
           <motion.div
-            className="mb-8 relative"
+            className="mb-8"
             animate={{ y: [0, -20, 0] }}
             transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
           >
-            <motion.svg
-              viewBox="0 0 200 200"
-              className="w-40 h-40 mx-auto"
-              animate={{ rotate: 360 }}
-              transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-            >
-              <defs>
-                <linearGradient id="spiderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#E23636" />
-                  <stop offset="100%" stopColor="#2B378C" />
-                </linearGradient>
-              </defs>
-              <circle cx="100" cy="100" r="80" fill="none" stroke="url(#spiderGrad)" strokeWidth="4" />
-              <path d="M100 20 L100 180 M20 100 L180 100 M40 40 L160 160 M40 160 L160 40" stroke="#E23636" strokeWidth="2" opacity="0.5" />
-              <text x="100" y="115" textAnchor="middle" fill="url(#spiderGrad)" fontSize="60" fontFamily="Bangers">🕷️</text>
-            </motion.svg>
+            <SpiderIcon className="mx-auto w-32 h-32" />
           </motion.div>
 
           <motion.h1
@@ -613,31 +682,32 @@ function App() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
           >
-            Explore every dimension. Meet every Spider-Person. Experience the web.
+            With great power comes great responsibility...
           </motion.p>
 
-          {/* Navigation pills */}
           <motion.div
             className="flex flex-wrap justify-center gap-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8 }}
           >
-            {['heroes', 'movies', 'comics'].map((section) => (
-              <motion.button
-                key={section}
-                className={`px-6 py-3 rounded-full font-bold text-lg uppercase ${activeSection === section ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-300'}`}
-                style={{ fontFamily: 'Bangers' }}
-                onClick={() => {
-                  setActiveSection(section)
-                  document.getElementById(section)?.scrollIntoView({ behavior: 'smooth' })
-                }}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                {section}
-              </motion.button>
-            ))}
+            <motion.button
+              className="comic-button web-shoot"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => document.getElementById('heroes')?.scrollIntoView({ behavior: 'smooth' })}
+            >
+              MEET THE HEROES
+            </motion.button>
+            <motion.button
+              className="comic-button"
+              style={{ background: 'linear-gradient(135deg, #2B378C, #1a1a5e)' }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => document.getElementById('villains')?.scrollIntoView({ behavior: 'smooth' })}
+            >
+              FACE THE VILLAINS
+            </motion.button>
           </motion.div>
         </motion.div>
 
@@ -654,21 +724,28 @@ function App() {
         />
       </section>
 
-      {/* Spider-Verse Characters Section */}
+      {/* Heroes Section */}
       <section id="heroes" className="relative py-32 px-4">
         <div className="max-w-7xl mx-auto">
           <motion.h2
-            className="text-center mb-16 comic-burst"
+            className="text-center mb-4 comic-burst"
             initial={{ x: -100, opacity: 0 }}
             whileInView={{ x: 0, opacity: 1 }}
             viewport={{ once: true }}
           >
             THE SPIDER-VERSE
           </motion.h2>
+          <motion.p
+            className="text-center text-gray-400 mb-16 max-w-2xl mx-auto"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+          >
+            Multiple dimensions. Infinite possibilities. One amazing Spider-Family.
+          </motion.p>
 
-          {/* Character Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {SPIDER_VERSE_CHARACTERS.map((character) => (
+            {HEROES.map((character) => (
               <CharacterCard
                 key={character.id}
                 character={character}
@@ -685,7 +762,7 @@ function App() {
           <AnimatePresence>
             {selectedCharacter && (
               <motion.div
-                className="mt-16 p-8 rounded-2xl bg-gray-900/80 border-2 border-red-600"
+                className="mt-16 p-8 rounded-2xl bg-gray-900/90 border-2 border-red-600 backdrop-blur-sm"
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 50 }}
@@ -698,22 +775,25 @@ function App() {
                     layoutId={`detail-image-${selectedCharacter.id}`}
                   />
                   <div className="flex-1">
-                    <h3 className="text-3xl font-bold mb-2" style={{ color: selectedCharacter.color, fontFamily: 'Bangers' }}>
+                    <h3 className="text-4xl font-bold mb-2" style={{ color: selectedCharacter.color, fontFamily: 'Bangers' }}>
                       {selectedCharacter.alias}
                     </h3>
-                    <p className="text-xl text-gray-300 mb-4">{selectedCharacter.name} • {selectedCharacter.universe}</p>
-                    <p className="text-gray-400 mb-6">{selectedCharacter.description}</p>
+                    <p className="text-xl text-gray-300 mb-1">{selectedCharacter.name}</p>
+                    <p className="text-gray-500 mb-4">{selectedCharacter.universe} • {selectedCharacter.actor}</p>
+                    <p className="text-gray-300 mb-6 leading-relaxed">{selectedCharacter.description}</p>
+
                     <div className="mb-4">
-                      <h4 className="text-lg font-bold mb-2" style={{ fontFamily: 'Bangers' }}>POWERS</h4>
+                      <h4 className="text-lg font-bold mb-3" style={{ fontFamily: 'Bangers' }}>SUPER POWERS</h4>
                       <div className="flex flex-wrap gap-2">
                         {selectedCharacter.powers.map((power) => (
-                          <span
+                          <motion.span
                             key={power}
                             className="px-3 py-1 rounded-full text-sm font-bold"
                             style={{ backgroundColor: selectedCharacter.color, color: 'white' }}
+                            whileHover={{ scale: 1.1 }}
                           >
                             {power}
-                          </span>
+                          </motion.span>
                         ))}
                       </div>
                     </div>
@@ -723,6 +803,36 @@ function App() {
               </motion.div>
             )}
           </AnimatePresence>
+        </div>
+      </section>
+
+      {/* Villains Section */}
+      <section id="villains" className="relative py-32 px-4 bg-gradient-to-b from-black via-gray-900 to-black">
+        <div className="max-w-7xl mx-auto">
+          <motion.h2
+            className="text-center mb-4"
+            initial={{ scale: 0 }}
+            whileInView={{ scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ type: 'spring', stiffness: 200 }}
+            style={{ color: '#DC2626' }}
+          >
+            THE ROGUES GALLERY
+          </motion.h2>
+          <motion.p
+            className="text-center text-gray-400 mb-16 max-w-2xl mx-auto"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+          >
+            New York's most dangerous criminals. Every hero needs a great villain.
+          </motion.p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {VILLAINS.map((villain) => (
+              <VillainCard key={villain.id} villain={villain} />
+            ))}
+          </div>
         </div>
       </section>
 
@@ -736,50 +846,24 @@ function App() {
             viewport={{ once: true }}
             transition={{ type: 'spring', stiffness: 200 }}
           >
-            CINEMATIC UNIVERSE
+            CINEMATIC MASTERPIECES
           </motion.h2>
 
-          {/* Masonry-style grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {MOVIES.map((movie, index) => (
               <motion.div
                 key={movie.id}
-                className={index % 3 === 0 ? 'md:col-span-2 md:row-span-2' : ''}
+                className={index === 0 ? 'md:col-span-2 lg:col-span-1' : ''}
                 onClick={() => setLightboxImage({ image: movie.image, title: movie.title })}
               >
-                <MoviePoster movie={movie} index={index} />
+                <MovieCard movie={movie} index={index} />
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Comics Gallery */}
-      <section id="comics" className="relative py-32 px-4">
-        <div className="max-w-7xl mx-auto">
-          <motion.h2
-            className="text-center mb-16"
-            initial={{ opacity: 0, rotateX: -90 }}
-            whileInView={{ opacity: 1, rotateX: 0 }}
-            viewport={{ once: true }}
-          >
-            LEGENDARY COMICS
-          </motion.h2>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {COMIC_COVERS.map((comic, index) => (
-              <motion.div
-                key={comic.id}
-                onClick={() => setLightboxImage({ image: comic.image, title: comic.title })}
-              >
-                <ComicCover comic={comic} index={index} />
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Interactive Stats Section */}
+      {/* Stats Section */}
       <section className="relative py-32 px-4">
         <div className="max-w-6xl mx-auto">
           <motion.h2
@@ -793,9 +877,9 @@ function App() {
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
-              { label: 'Spider-People', value: 100, suffix: '+', icon: '🕷️', color: '#E23636' },
+              { label: 'Spider-Verse Heroes', value: 100, suffix: '+', icon: '🕷️', color: '#E23636' },
               { label: 'Comic Issues', value: 2500, suffix: '+', icon: '📚', color: '#2B378C' },
-              { label: 'Movies', value: 11, suffix: '', icon: '🎬', color: '#F4D03F' },
+              { label: 'Live-Action Movies', value: 11, suffix: '', icon: '🎬', color: '#F4D03F' },
               { label: 'Years of Web', value: 62, suffix: '', icon: '🎂', color: '#E23636' },
             ].map((stat, index) => (
               <motion.div
@@ -817,9 +901,6 @@ function App() {
                 <motion.p
                   className="text-5xl font-bold mb-2"
                   style={{ color: stat.color, fontFamily: 'Bangers' }}
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ once: true }}
                 >
                   {stat.value}{stat.suffix}
                 </motion.p>
@@ -831,7 +912,7 @@ function App() {
       </section>
 
       {/* Quote Section */}
-      <section className="relative py-32 px-4 overflow-hidden">
+      <section className="relative py-32 px-4">
         <motion.div
           className="max-w-4xl mx-auto text-center relative"
           initial={{ opacity: 0, scale: 0.8 }}
@@ -839,7 +920,6 @@ function App() {
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
         >
-          {/* Animated background shapes */}
           <motion.div
             className="absolute -left-20 top-0 w-40 h-40 bg-red-600/20 rounded-full blur-3xl"
             animate={{ scale: [1, 1.5, 1], x: [0, 20, 0] }}
@@ -873,19 +953,17 @@ function App() {
             whileHover={{ scale: 1.2, rotate: 360 }}
             transition={{ duration: 0.5 }}
           >
-            <span className="text-6xl">🕷️</span>
+            <SpiderIcon className="mx-auto w-20 h-20" />
           </motion.div>
 
           <motion.p
             className="text-gray-400 mb-8"
             style={{ fontFamily: 'Comic Neue' }}
           >
-            A fan-made tribute to the Web-Slinger and the entire Spider-Verse
+            A fan-made tribute to Spider-Man and the entire Spider-Verse
           </motion.p>
 
-          <motion.div
-            className="flex justify-center gap-6"
-          >
+          <motion.div className="flex justify-center gap-6">
             {['🕷️', '🕸️', '🦸', '🏙️', '📱'].map((emoji, index) => (
               <motion.span
                 key={index}
