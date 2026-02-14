@@ -1,11 +1,105 @@
-import { useEffect, useRef, useState } from 'react'
-import { motion, useScroll, useTransform, AnimatePresence, useSpring } from 'framer-motion'
+import { useEffect, useRef, useState, useCallback } from 'react'
+import { motion, useScroll, useTransform, AnimatePresence, useSpring, useMotionValue, useMotionTemplate } from 'framer-motion'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { Stars, Float, Trail, Sphere, MeshDistortMaterial } from '@react-three/drei'
+import { Stars, Float, MeshDistortMaterial } from '@react-three/drei'
 import * as THREE from 'three'
 import './App.css'
 
-// 3D Spider Web Background Component
+// Spiderman character data with images
+const SPIDER_VERSE_CHARACTERS = [
+  {
+    id: 'peter-classic',
+    name: 'Peter Parker',
+    alias: 'Classic Spider-Man',
+    universe: 'Earth-616',
+    image: 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=600&h=800&fit=crop',
+    color: '#E23636',
+    description: 'The original web-slinger. Bitten by a radioactive spider, Peter Parker became the hero we all know and love.',
+    powers: ['Web-Shooters', 'Spider-Sense', 'Wall-Crawling', 'Super Strength'],
+    firstAppearance: 'Amazing Fantasy #15 (1962)',
+  },
+  {
+    id: 'miles',
+    name: 'Miles Morales',
+    alias: 'Ultimate Spider-Man',
+    universe: 'Earth-1610',
+    image: 'https://images.unsplash.com/photo-1604200213928-ba3cf4fc8ef1?w=600&h=800&fit=crop',
+    color: '#000000',
+    description: 'A teenager from Brooklyn who was bitten by a radioactive spider from Oscorp. He has electric venom sting and camouflage abilities.',
+    powers: ['Bio-Electricity', 'Camouflage', 'Venom Blast', 'Spider-Camouflage'],
+    firstAppearance: 'Ultimate Fallout #4 (2011)',
+  },
+  {
+    id: 'gwen',
+    name: 'Gwen Stacy',
+    alias: 'Spider-Gwen',
+    universe: 'Earth-65',
+    image: 'https://images.unsplash.com/photo-1535295972055-1c762f4483e5?w=600&h=800&fit=crop',
+    color: '#FF1493',
+    description: 'In her universe, Gwen was bitten by the radioactive spider instead of Peter. She uses web-shooters and drums in a band.',
+    powers: ['Web-Shooters', 'Spider-Sense', 'Wall-Crawling', 'Musical Talent'],
+    firstAppearance: 'Edge of Spider-Verse #2 (2014)',
+  },
+  {
+    id: 'ham',
+    name: 'Peter Porker',
+    alias: 'Spider-Ham',
+    universe: 'Earth-8311',
+    image: 'https://images.unsplash.com/photo-1560807707-8cc77767d783?w=600&h=800&fit=crop',
+    color: '#FF6B6B',
+    description: 'A spider bitten by a radioactive pig who became a porcine parody of Spider-Man. Yes, this is real and amazing!',
+    powers: ['Cartoon Physics', 'Mallet Space', 'Toon Force', 'Pork Sense'],
+    firstAppearance: 'Marvel Tails #1 (1983)',
+  },
+  {
+    id: ' Noir',
+    name: 'Peter Parker',
+    alias: 'Spider-Man Noir',
+    universe: 'Earth-90214',
+    image: 'https://images.unsplash.com/photo-1509347528160-9a9e33742cdb?w=600&h=800&fit=crop',
+    color: '#1a1a1a',
+    description: 'A 1930s version of Spider-Man operating during the Great Depression. Uses guns and has a much darker tone.',
+    powers: ['Web-Shooters', 'Enhanced Agility', 'Marksmanship', 'Stealth'],
+    firstAppearance: 'Spider-Man Noir #1 (2009)',
+  },
+  {
+    id: 'peni',
+    name: 'Peni Parker',
+    alias: 'SP//dr',
+    universe: 'Earth-14512',
+    image: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&h=800&fit=crop',
+    color: '#FF4081',
+    description: 'A Japanese-American girl who pilots a spider-mech suit powered by a radioactive spider with whom she shares a psychic link.',
+    powers: ['Mech Suit', 'Psychic Link', 'Advanced Tech', 'Acrobatics'],
+    firstAppearance: 'Edge of Spider-Verse #5 (2014)',
+  },
+]
+
+// Movie gallery data
+const MOVIES = [
+  { id: 1, title: 'Spider-Man (2002)', rating: 'PG-13', image: 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=800&h=450&fit=crop', director: 'Sam Raimi', year: 2002 },
+  { id: 2, title: 'Spider-Man 2 (2004)', rating: 'PG-13', image: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=800&h=450&fit=crop', director: 'Sam Raimi', year: 2004 },
+  { id: 3, title: 'Spider-Man 3 (2007)', rating: 'PG-13', image: 'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=800&h=450&fit=crop', director: 'Sam Raimi', year: 2007 },
+  { id: 4, title: 'The Amazing Spider-Man', rating: 'PG-13', image: 'https://images.unsplash.com/photo-1560167016-022b78a0258e?w=800&h=450&fit=crop', director: 'Marc Webb', year: 2012 },
+  { id: 5, title: 'Spider-Man: Homecoming', rating: 'PG-13', image: 'https://images.unsplash.com/photo-1563089145-599997674d42?w=800&h=450&fit=crop', director: 'Jon Watts', year: 2017 },
+  { id: 6, title: 'Spider-Verse (2018)', rating: 'PG', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&h=450&fit=crop', director: 'Bob Persichetti', year: 2018 },
+  { id: 7, title: 'Far From Home (2019)', rating: 'PG-13', image: 'https://images.unsplash.com/photo-1518676590629-3dcbd9c5a5c9?w=800&h=450&fit=crop', director: 'Jon Watts', year: 2019 },
+  { id: 8, title: 'No Way Home (2021)', rating: 'PG-13', image: 'https://images.unsplash.com/photo-1535016120720-40c6874c3b13?w=800&h=450&fit=crop', director: 'Jon Watts', year: 2021 },
+]
+
+// Comic book covers gallery
+const COMIC_COVERS = [
+  { id: 1, title: 'Amazing Fantasy #15', year: 1962, image: 'https://images.unsplash.com/photo-1588497859490-85d1c17db96d?w=400&h=600&fit=crop' },
+  { id: 2, title: 'The Amazing Spider-Man #1', year: 1963, image: 'https://images.unsplash.com/photo-1612036782180-6f0b6cd846fe?w=400&h=600&fit=crop' },
+  { id: 3, title: 'The Night Gwen Stacy Died', year: 1973, image: 'https://images.unsplash.com/photo-1618519764620-7403abdbdfe9?w=400&h=600&fit=crop' },
+  { id: 4, title: 'Secret Wars #8', year: 1984, image: 'https://images.unsplash.com/photo-1601645191163-3fc0d5d64e35?w=400&h=600&fit=crop' },
+  { id: 5, title: 'Spider-Man #1 (Todd McFarlane)', year: 1990, image: 'https://images.unsplash.com/photo-1624213111452-35e8d3d5cc18?w=400&h=600&fit=crop' },
+  { id: 6, title: 'Ultimate Spider-Man #1', year: 2000, image: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=400&h=600&fit=crop' },
+  { id: 7, title: 'Superior Spider-Man #1', year: 2013, image: 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=400&h=600&fit=crop' },
+  { id: 8, title: 'Spider-Gwen #1', year: 2015, image: 'https://images.unsplash.com/photo-1535295972055-1c762f4483e5?w=400&h=600&fit=crop' },
+]
+
+// 3D Background Component
 function SpiderWebBackground() {
   const meshRef = useRef<THREE.Mesh>(null)
 
@@ -39,120 +133,365 @@ function SpiderWebBackground() {
   )
 }
 
-// Animated Web Line
-function WebLine({ delay }: { delay: number }) {
-  return (
-    <motion.div
-      className="absolute bg-gradient-to-b from-transparent via-white/20 to-transparent"
-      style={{
-        width: '2px',
-        height: '100vh',
-        left: `${Math.random() * 100}%`,
-      }}
-      initial={{ scaleY: 0, opacity: 0 }}
-      animate={{ scaleY: 1, opacity: [0, 0.5, 0] }}
-      transition={{
-        duration: 3,
-        delay,
-        repeat: Infinity,
-        repeatDelay: Math.random() * 5,
-      }}
-    />
-  )
+// Mouse follower glow effect
+function MouseGlow() {
+  const mouseX = useMotionValue(0)
+  const mouseY = useMotionValue(0)
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      mouseX.set(e.clientX)
+      mouseY.set(e.clientY)
+    }
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => window.removeEventListener('mousemove', handleMouseMove)
+  }, [mouseX, mouseY])
+
+  const background = useMotionTemplate`radial-gradient(600px circle at ${mouseX}px ${mouseY}px, rgba(226, 54, 54, 0.15), transparent 40%)`
+
+  return <motion.div className="fixed inset-0 pointer-events-none z-0" style={{ background }} />
 }
 
-// Spider Icon Component
-function SpiderIcon({ className = '' }: { className?: string }) {
-  return (
-    <svg className={`spider-spin ${className}`} viewBox="0 0 100 100" width="60" height="60">
-      <defs>
-        <linearGradient id="spiderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#E23636" />
-          <stop offset="100%" stopColor="#2B378C" />
-        </linearGradient>
-      </defs>
-      {/* Spider body */}
-      <ellipse cx="50" cy="50" rx="12" ry="15" fill="url(#spiderGrad)" />
-      {/* Spider legs */}
-      <g stroke="#E23636" strokeWidth="3" fill="none" strokeLinecap="round">
-        <path d="M40 40 Q 20 25, 10 30" />
-        <path d="M45 35 Q 30 10, 20 15" />
-        <path d="M55 35 Q 70 10, 80 15" />
-        <path d="M60 40 Q 80 25, 90 30" />
-        <path d="M40 60 Q 20 75, 10 70" />
-        <path d="M45 65 Q 30 90, 20 85" />
-        <path d="M55 65 Q 70 90, 80 85" />
-        <path d="M60 60 Q 80 75, 90 70" />
-      </g>
-      {/* Eyes */}
-      <ellipse cx="46" cy="45" rx="3" ry="4" fill="white" />
-      <ellipse cx="54" cy="45" rx="3" ry="4" fill="white" />
-      <circle cx="46" cy="45" r="1.5" fill="black" />
-      <circle cx="54" cy="45" r="1.5" fill="black" />
-    </svg>
-  )
-}
+// Character Card with 3D tilt effect
+function CharacterCard({ character, onClick, isSelected }: { character: typeof SPIDER_VERSE_CHARACTERS[0], onClick: () => void, isSelected: boolean }) {
+  const x = useMotionValue(0)
+  const y = useMotionValue(0)
+  const rotateX = useTransform(y, [-100, 100], [10, -10])
+  const rotateY = useTransform(x, [-100, 100], [-10, 10])
 
-// Suit Card Component
-function SuitCard({ title, description, color, icon }: { title: string; description: string; color: string; icon: string }) {
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const centerX = rect.left + rect.width / 2
+    const centerY = rect.top + rect.height / 2
+    x.set(e.clientX - centerX)
+    y.set(e.clientY - centerY)
+  }, [x, y])
+
+  const handleMouseLeave = useCallback(() => {
+    x.set(0)
+    y.set(0)
+  }, [x, y])
+
   return (
     <motion.div
-      className="flip-card h-80 cursor-pointer"
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
+      className="relative cursor-pointer"
+      style={{ perspective: 1000 }}
+      onClick={onClick}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      whileHover={{ scale: 1.02, zIndex: 10 }}
+      layoutId={`character-${character.id}`}
     >
-      <div className="flip-card-inner">
-        <div className={`flip-card-front suit-card rounded-lg p-6 flex flex-col items-center justify-center`}
-          style={{ borderColor: color }}>
+      <motion.div
+        className="relative overflow-hidden rounded-xl bg-gray-900 border-4"
+        style={{
+          borderColor: character.color,
+          rotateX,
+          rotateY,
+          transformStyle: 'preserve-3d',
+        }}
+      >
+        {/* Character Image */}
+        <div className="relative h-80 overflow-hidden">
+          <motion.img
+            src={character.image}
+            alt={character.name}
+            className="w-full h-full object-cover"
+            whileHover={{ scale: 1.1 }}
+            transition={{ duration: 0.4 }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+
+          {/* Universe badge */}
           <motion.div
-            className="text-6xl mb-4"
-            animate={{ rotate: [0, 10, -10, 0], y: [0, -10, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
+            className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold"
+            style={{ backgroundColor: character.color, color: 'white' }}
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2 }}
           >
-            {icon}
+            {character.universe}
           </motion.div>
-          <h3 className="text-2xl font-bold mb-2" style={{ fontFamily: 'Bangers', color }}>{title}</h3>
-          <p className="text-sm text-gray-400 text-center">Hover to reveal powers</p>
-        </div>
-        <div className={`flip-card-back suit-card rounded-lg p-6 flex flex-col items-center justify-center`}
-          style={{ background: `linear-gradient(135deg, ${color}22, transparent)` }}>
-          <h3 className="text-2xl font-bold mb-4" style={{ fontFamily: 'Bangers', color }}>ABILITIES</h3>
-          <p className="text-center text-white leading-relaxed">{description}</p>
+
+          {/* Glow effect on hover */}
           <motion.div
-            className="mt-4 w-full h-1 rounded"
-            style={{ background: color }}
-            animate={{ scaleX: [0, 1, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
+            className="absolute inset-0 opacity-0"
+            whileHover={{ opacity: 1 }}
+            style={{
+              background: `radial-gradient(circle at 50% 50%, ${character.color}40, transparent 70%)`,
+            }}
           />
         </div>
+
+        {/* Character Info */}
+        <div className="p-6">
+          <h3 className="text-2xl font-bold mb-1" style={{ color: character.color, fontFamily: 'Bangers' }}>
+            {character.alias}
+          </h3>
+          <p className="text-gray-400 text-sm mb-3">{character.name}</p>
+
+          {/* Powers pills */}
+          <div className="flex flex-wrap gap-2">
+            {character.powers.slice(0, 3).map((power, idx) => (
+              <motion.span
+                key={power}
+                className="px-2 py-1 text-xs rounded-full border"
+                style={{ borderColor: character.color, color: character.color }}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.1 }}
+              >
+                {power}
+              </motion.span>
+            ))}
+          </div>
+        </div>
+
+        {/* Selection indicator */}
+        {isSelected && (
+          <motion.div
+            className="absolute inset-0 border-4 border-white rounded-xl"
+            layoutId="selection-indicator"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          />
+        )}
+      </motion.div>
+    </motion.div>
+  )
+}
+
+// Movie poster with hover effects
+function MoviePoster({ movie, index }: { movie: typeof MOVIES[0], index: number }) {
+  const [isHovered, setIsHovered] = useState(false)
+
+  return (
+    <motion.div
+      className="relative group cursor-pointer"
+      initial={{ opacity: 0, y: 50 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.1 }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="relative overflow-hidden rounded-lg bg-gray-900">
+        {/* Poster Image */}
+        <motion.img
+          src={movie.image}
+          alt={movie.title}
+          className="w-full aspect-video object-cover"
+          animate={{ scale: isHovered ? 1.1 : 1 }}
+          transition={{ duration: 0.4 }}
+        />
+
+        {/* Overlay */}
+        <motion.div
+          className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isHovered ? 1 : 0.7 }}
+        />
+
+        {/* Content */}
+        <div className="absolute inset-0 p-4 flex flex-col justify-end">
+          <motion.h3
+            className="text-xl font-bold mb-1"
+            style={{ fontFamily: 'Bangers' }}
+            animate={{ y: isHovered ? 0 : 10, opacity: isHovered ? 1 : 0.8 }}
+          >
+            {movie.title}
+          </motion.h3>
+
+          <motion.div
+            className="flex items-center gap-3 text-sm text-gray-300"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 20 }}
+          >
+            <span>{movie.year}</span>
+            <span className="w-1 h-1 bg-red-500 rounded-full" />
+            <span>{movie.director}</span>
+            <span className="px-2 py-0.5 bg-yellow-500 text-black text-xs font-bold rounded">{movie.rating}</span>
+          </motion.div>
+        </div>
+
+        {/* Spider web corner decoration */}
+        <svg className="absolute top-0 right-0 w-24 h-24 opacity-30" viewBox="0 0 100 100">
+          <path d="M100 0 L0 100 M100 20 L20 100 M100 40 L40 100 M100 60 L60 100 M100 80 L80 100" stroke="#E23636" strokeWidth="1" fill="none" />
+        </svg>
       </div>
     </motion.div>
   )
 }
 
-// Comic Speech Bubble
-function SpeechBubble({ text, side = 'left' }: { text: string; side?: 'left' | 'right' }) {
+// Comic cover with 3D flip
+function ComicCover({ comic, index }: { comic: typeof COMIC_COVERS[0], index: number }) {
+  const [isFlipped, setIsFlipped] = useState(false)
+
   return (
     <motion.div
-      className={`relative inline-block ${side === 'right' ? 'ml-auto' : ''}`}
-      initial={{ scale: 0, opacity: 0 }}
-      whileInView={{ scale: 1, opacity: 1 }}
+      className="relative cursor-pointer"
+      style={{ perspective: 1000 }}
+      initial={{ opacity: 0, rotateY: -90 }}
+      whileInView={{ opacity: 1, rotateY: 0 }}
       viewport={{ once: true }}
-      transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+      transition={{ delay: index * 0.1, type: 'spring' }}
+      onClick={() => setIsFlipped(!isFlipped)}
     >
-      <div className="comic-panel px-6 py-4 max-w-md">
-        <p className="text-black font-bold text-lg" style={{ fontFamily: 'Comic Neue' }}>{text}</p>
-      </div>
-      <div
-        className={`absolute ${side === 'left' ? '-right-4' : '-left-4'} bottom-4 w-0 h-0`}
+      <motion.div
+        className="relative w-full aspect-[2/3] rounded-lg overflow-hidden shadow-2xl"
+        animate={{ rotateY: isFlipped ? 180 : 0 }}
+        transition={{ duration: 0.6 }}
+        style={{ transformStyle: 'preserve-3d' }}
+      >
+        {/* Front */}
+        <div className="absolute inset-0 backface-hidden">
+          <img src={comic.image} alt={comic.title} className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+          <div className="absolute bottom-0 left-0 right-0 p-4">
+            <p className="text-yellow-400 text-xs font-bold">{comic.year}</p>
+            <h4 className="text-white font-bold text-sm" style={{ fontFamily: 'Bangers' }}>{comic.title}</h4>
+          </div>
+        </div>
+
+        {/* Back */}
+        <div
+          className="absolute inset-0 bg-gradient-to-br from-red-600 to-blue-800 p-4 flex flex-col items-center justify-center text-center"
+          style={{ transform: 'rotateY(180deg)', backfaceVisibility: 'hidden' }}
+        >
+          <span className="text-4xl mb-4">🕷️</span>
+          <p className="text-white text-sm">Click to view details</p>
+          <p className="text-yellow-300 text-xs mt-2">Rare Edition</p>
+        </div>
+      </motion.div>
+
+      {/* Shine effect */}
+      <motion.div
+        className="absolute inset-0 rounded-lg pointer-events-none"
         style={{
-          borderStyle: 'solid',
-          borderWidth: side === 'left' ? '15px 0 15px 25px' : '15px 25px 15px 0',
-          borderColor: side === 'left'
-            ? 'transparent transparent transparent white'
-            : 'transparent white transparent transparent',
+          background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.2) 45%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0.2) 55%, transparent 60%)',
         }}
+        animate={{ x: isFlipped ? '200%' : '-200%' }}
+        transition={{ duration: 0.6 }}
       />
+    </motion.div>
+  )
+}
+
+// Interactive spider web canvas
+function InteractiveWeb({ mousePos }: { mousePos: { x: number, y: number } }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    canvas.width = window.innerWidth
+    canvas.height = window.innerHeight
+
+    const points: { x: number, y: number, vx: number, vy: number }[] = []
+    const numPoints = 50
+
+    for (let i = 0; i < numPoints; i++) {
+      points.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.5,
+        vy: (Math.random() - 0.5) * 0.5,
+      })
+    }
+
+    let animationId: number
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+      // Update points
+      points.forEach((point, i) => {
+        point.x += point.vx
+        point.y += point.vy
+
+        if (point.x < 0 || point.x > canvas.width) point.vx *= -1
+        if (point.y < 0 || point.y > canvas.height) point.vy *= -1
+
+        // Mouse attraction
+        const dx = mousePos.x - point.x
+        const dy = mousePos.y - point.y
+        const dist = Math.sqrt(dx * dx + dy * dy)
+        if (dist < 200) {
+          point.vx += dx * 0.0001
+          point.vy += dy * 0.0001
+        }
+
+        // Draw point
+        ctx.beginPath()
+        ctx.arc(point.x, point.y, 2, 0, Math.PI * 2)
+        ctx.fillStyle = 'rgba(226, 54, 54, 0.6)'
+        ctx.fill()
+
+        // Draw connections
+        points.slice(i + 1).forEach((other) => {
+          const d = Math.sqrt((point.x - other.x) ** 2 + (point.y - other.y) ** 2)
+          if (d < 150) {
+            ctx.beginPath()
+            ctx.moveTo(point.x, point.y)
+            ctx.lineTo(other.x, other.y)
+            ctx.strokeStyle = `rgba(226, 54, 54, ${0.3 * (1 - d / 150)})`
+            ctx.stroke()
+          }
+        })
+      })
+
+      animationId = requestAnimationFrame(animate)
+    }
+
+    animate()
+
+    const handleResize = () => {
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => {
+      cancelAnimationFrame(animationId)
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [mousePos])
+
+  return <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-0 opacity-40" />
+}
+
+// Lightbox modal
+function Lightbox({ image, title, onClose }: { image: string, title: string, onClose: () => void }) {
+  return (
+    <motion.div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/95"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onClose}
+    >
+      <motion.div
+        className="relative max-w-4xl w-full"
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.8, opacity: 0 }}
+        transition={{ type: 'spring', damping: 25 }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <img src={image} alt={title} className="w-full rounded-lg shadow-2xl" />
+        <button
+          onClick={onClose}
+          className="absolute -top-12 right-0 text-white text-4xl hover:text-red-500 transition-colors"
+        >
+          ×
+        </button>
+        <h3 className="mt-4 text-2xl text-center" style={{ fontFamily: 'Bangers', color: '#E23636' }}>{title}</h3>
+      </motion.div>
     </motion.div>
   )
 }
@@ -160,6 +499,10 @@ function SpeechBubble({ text, side = 'left' }: { text: string; side?: 'left' | '
 // Main App Component
 function App() {
   const [loading, setLoading] = useState(true)
+  const [selectedCharacter, setSelectedCharacter] = useState<typeof SPIDER_VERSE_CHARACTERS[0] | null>(null)
+  const [lightboxImage, setLightboxImage] = useState<{ image: string, title: string } | null>(null)
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
+  const [activeSection, setActiveSection] = useState('heroes')
   const containerRef = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({ target: containerRef })
 
@@ -167,14 +510,21 @@ function App() {
   const scaleX = useSpring(scrollYProgress, springConfig)
 
   // Scroll-based transforms
-  const y1 = useTransform(scrollYProgress, [0, 1], [0, -200])
-  const y2 = useTransform(scrollYProgress, [0, 1], [0, -400])
+  const y1 = useTransform(scrollYProgress, [0, 1], [0, -300])
+  const y2 = useTransform(scrollYProgress, [0, 1], [0, -500])
   const rotate = useTransform(scrollYProgress, [0, 1], [0, 360])
-  const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [1, 1, 1, 0])
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 2000)
     return () => clearTimeout(timer)
+  }, [])
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePos({ x: e.clientX, y: e.clientY })
+    }
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => window.removeEventListener('mousemove', handleMouseMove)
   }, [])
 
   if (loading) {
@@ -187,32 +537,28 @@ function App() {
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ duration: 1.5, repeat: Infinity }}
         >
-          SWINGING INTO ACTION...
+          ASSEMBLING THE SPIDER-VERSE...
         </motion.p>
       </div>
     )
   }
 
   return (
-    <div ref={containerRef} className="relative min-h-screen overflow-x-hidden">
+    <div ref={containerRef} className="relative min-h-screen overflow-x-hidden bg-black">
       {/* Progress Bar */}
       <motion.div
         className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#E23636] to-[#2B378C] z-50"
         style={{ scaleX, transformOrigin: 'left' }}
       />
 
-      {/* Web Background Pattern */}
-      <div className="web-pattern" />
+      {/* Mouse glow effect */}
+      <MouseGlow />
 
-      {/* Animated Web Lines */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        {[...Array(5)].map((_, i) => (
-          <WebLine key={i} delay={i * 0.5} />
-        ))}
-      </div>
+      {/* Interactive Web Background */}
+      <InteractiveWeb mousePos={mousePos} />
 
-      {/* 3D Background Canvas */}
-      <div className="fixed inset-0 z-[-1]">
+      {/* 3D Canvas Background */}
+      <div className="fixed inset-0 z-[-2]">
         <Canvas camera={{ position: [0, 0, 5], fov: 75 }}>
           <SpiderWebBackground />
         </Canvas>
@@ -226,12 +572,28 @@ function App() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, ease: 'easeOut' }}
         >
+          {/* Animated Spider Logo */}
           <motion.div
-            className="mb-8"
+            className="mb-8 relative"
             animate={{ y: [0, -20, 0] }}
             transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
           >
-            <SpiderIcon className="mx-auto w-32 h-32" />
+            <motion.svg
+              viewBox="0 0 200 200"
+              className="w-40 h-40 mx-auto"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+            >
+              <defs>
+                <linearGradient id="spiderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#E23636" />
+                  <stop offset="100%" stopColor="#2B378C" />
+                </linearGradient>
+              </defs>
+              <circle cx="100" cy="100" r="80" fill="none" stroke="url(#spiderGrad)" strokeWidth="4" />
+              <path d="M100 20 L100 180 M20 100 L180 100 M40 40 L160 160 M40 160 L160 40" stroke="#E23636" strokeWidth="2" opacity="0.5" />
+              <text x="100" y="115" textAnchor="middle" fill="url(#spiderGrad)" fontSize="60" fontFamily="Bangers">🕷️</text>
+            </motion.svg>
           </motion.div>
 
           <motion.h1
@@ -251,191 +613,173 @@ function App() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
           >
-            With great power comes great responsibility...
+            Explore every dimension. Meet every Spider-Person. Experience the web.
           </motion.p>
 
-          <motion.button
-            className="comic-button web-shoot"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => document.getElementById('suits')?.scrollIntoView({ behavior: 'smooth' })}
+          {/* Navigation pills */}
+          <motion.div
+            className="flex flex-wrap justify-center gap-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
           >
-            ENTER THE WEB
-          </motion.button>
+            {['heroes', 'movies', 'comics'].map((section) => (
+              <motion.button
+                key={section}
+                className={`px-6 py-3 rounded-full font-bold text-lg uppercase ${activeSection === section ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-300'}`}
+                style={{ fontFamily: 'Bangers' }}
+                onClick={() => {
+                  setActiveSection(section)
+                  document.getElementById(section)?.scrollIntoView({ behavior: 'smooth' })
+                }}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {section}
+              </motion.button>
+            ))}
+          </motion.div>
         </motion.div>
 
         {/* Floating Elements */}
         <motion.div
-          className="absolute top-20 left-10 w-20 h-20 border-4 border-[#E23636] rounded-full opacity-30"
+          className="absolute top-20 left-10 w-32 h-32 border-4 border-[#E23636] rounded-full opacity-20"
           style={{ y: y1 }}
           animate={{ rotate: 360 }}
           transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
         />
         <motion.div
-          className="absolute bottom-40 right-20 w-32 h-32 bg-gradient-to-br from-[#2B378C] to-transparent rounded-lg opacity-20"
+          className="absolute bottom-40 right-20 w-48 h-48 bg-gradient-to-br from-[#2B378C] to-transparent rounded-lg opacity-10"
           style={{ y: y2, rotate }}
         />
       </section>
 
-      {/* Spider Suits Section */}
-      <section id="suits" className="relative py-32 px-4">
-        <motion.div
-          className="max-w-7xl mx-auto"
-          style={{ opacity }}
-        >
+      {/* Spider-Verse Characters Section */}
+      <section id="heroes" className="relative py-32 px-4">
+        <div className="max-w-7xl mx-auto">
           <motion.h2
-            className="text-center mb-20 comic-burst"
+            className="text-center mb-16 comic-burst"
             initial={{ x: -100, opacity: 0 }}
             whileInView={{ x: 0, opacity: 1 }}
             viewport={{ once: true }}
           >
-            LEGENDARY SUITS
+            THE SPIDER-VERSE
           </motion.h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0 }}
-            >
-              <SuitCard
-                title="CLASSIC SUIT"
-                description="Web-shooters with impact webbing, spider-tracers, and enhanced strength. The original red and blue that started it all."
-                color="#E23636"
-                icon="🕷️"
+          {/* Character Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {SPIDER_VERSE_CHARACTERS.map((character) => (
+              <CharacterCard
+                key={character.id}
+                character={character}
+                onClick={() => {
+                  setSelectedCharacter(character)
+                  setLightboxImage({ image: character.image, title: character.alias })
+                }}
+                isSelected={selectedCharacter?.id === character.id}
               />
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
-            >
-              <SuitCard
-                title="SYMBIOTE SUIT"
-                description="Alien symbiote grants shape-shifting, unlimited organic webbing, and enhanced abilities. Beware the darkness within."
-                color="#1a1a1a"
-                icon="👤"
-              />
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.4 }}
-            >
-              <SuitCard
-                title="IRON SPIDER"
-                description="Tony Stark's gift features nano-tech armor, spider-arms, and instant kill mode. The ultimate evolution."
-                color="#F4D03F"
-                icon="🦾"
-              />
-            </motion.div>
+            ))}
           </div>
-        </motion.div>
+
+          {/* Selected Character Detail */}
+          <AnimatePresence>
+            {selectedCharacter && (
+              <motion.div
+                className="mt-16 p-8 rounded-2xl bg-gray-900/80 border-2 border-red-600"
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 50 }}
+              >
+                <div className="flex flex-col md:flex-row gap-8">
+                  <motion.img
+                    src={selectedCharacter.image}
+                    alt={selectedCharacter.name}
+                    className="w-full md:w-64 h-80 object-cover rounded-lg"
+                    layoutId={`detail-image-${selectedCharacter.id}`}
+                  />
+                  <div className="flex-1">
+                    <h3 className="text-3xl font-bold mb-2" style={{ color: selectedCharacter.color, fontFamily: 'Bangers' }}>
+                      {selectedCharacter.alias}
+                    </h3>
+                    <p className="text-xl text-gray-300 mb-4">{selectedCharacter.name} • {selectedCharacter.universe}</p>
+                    <p className="text-gray-400 mb-6">{selectedCharacter.description}</p>
+                    <div className="mb-4">
+                      <h4 className="text-lg font-bold mb-2" style={{ fontFamily: 'Bangers' }}>POWERS</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedCharacter.powers.map((power) => (
+                          <span
+                            key={power}
+                            className="px-3 py-1 rounded-full text-sm font-bold"
+                            style={{ backgroundColor: selectedCharacter.color, color: 'white' }}
+                          >
+                            {power}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-500">First Appearance: {selectedCharacter.firstAppearance}</p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </section>
 
-      {/* Abilities Section with Parallax */}
-      <section className="relative py-32 px-4 overflow-hidden">
-        <div className="max-w-6xl mx-auto">
+      {/* Movies Gallery */}
+      <section id="movies" className="relative py-32 px-4">
+        <div className="max-w-7xl mx-auto">
           <motion.h2
-            className="text-center mb-20"
+            className="text-center mb-16"
             initial={{ scale: 0 }}
             whileInView={{ scale: 1 }}
             viewport={{ once: true }}
             transition={{ type: 'spring', stiffness: 200 }}
           >
-            SPIDER-ABILITIES
+            CINEMATIC UNIVERSE
           </motion.h2>
 
-          <div className="space-y-20">
-            {/* Ability 1 */}
-            <div className="flex flex-col md:flex-row items-center gap-8">
+          {/* Masonry-style grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {MOVIES.map((movie, index) => (
               <motion.div
-                className="flex-1"
-                initial={{ x: -100, opacity: 0 }}
-                whileInView={{ x: 0, opacity: 1 }}
-                viewport={{ once: true }}
+                key={movie.id}
+                className={index % 3 === 0 ? 'md:col-span-2 md:row-span-2' : ''}
+                onClick={() => setLightboxImage({ image: movie.image, title: movie.title })}
               >
-                <SpeechBubble text="My spider-sense tingles! I can sense danger before it happens. It's like having a super-powered early warning system!" />
+                <MoviePoster movie={movie} index={index} />
               </motion.div>
-              <motion.div
-                className="flex-1 flex justify-center"
-                style={{ y: y1 }}
-                whileHover={{ scale: 1.1, rotate: 5 }}
-              >
-                <div className="w-48 h-48 rounded-full bg-gradient-to-br from-[#E23636] to-[#2B378C] flex items-center justify-center shadow-2xl">
-                  <motion.span
-                    className="text-6xl"
-                    animate={{ rotate: [0, 15, -15, 0] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    ⚡
-                  </motion.span>
-                </div>
-              </motion.div>
-            </div>
-
-            {/* Ability 2 */}
-            <div className="flex flex-col md:flex-row-reverse items-center gap-8">
-              <motion.div
-                className="flex-1"
-                initial={{ x: 100, opacity: 0 }}
-                whileInView={{ x: 0, opacity: 1 }}
-                viewport={{ once: true }}
-              >
-                <SpeechBubble text="Web-slinging through New York at 100mph! My web-shooters can hold 500 pounds and dissolve in 2 hours." side="right" />
-              </motion.div>
-              <motion.div
-                className="flex-1 flex justify-center"
-                style={{ y: y2 }}
-                whileHover={{ scale: 1.1, rotate: -5 }}
-              >
-                <div className="w-48 h-48 rounded-full bg-gradient-to-br from-[#2B378C] to-[#E23636] flex items-center justify-center shadow-2xl">
-                  <motion.span
-                    className="text-6xl"
-                    animate={{ y: [0, -20, 0] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                  >
-                    🕸️
-                  </motion.span>
-                </div>
-              </motion.div>
-            </div>
-
-            {/* Ability 3 */}
-            <div className="flex flex-col md:flex-row items-center gap-8">
-              <motion.div
-                className="flex-1"
-                initial={{ x: -100, opacity: 0 }}
-                whileInView={{ x: 0, opacity: 1 }}
-                viewport={{ once: true }}
-              >
-                <SpeechBubble text="Wall-crawling! I can stick to any surface using molecular attraction. Gravity is optional when you're Spider-Man!" />
-              </motion.div>
-              <motion.div
-                className="flex-1 flex justify-center"
-                whileHover={{ scale: 1.1, rotate: 5 }}
-              >
-                <div className="w-48 h-48 rounded-full bg-gradient-to-br from-gray-800 to-black flex items-center justify-center shadow-2xl border-4 border-[#E23636]">
-                  <motion.span
-                    className="text-6xl"
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    🧗
-                  </motion.span>
-                </div>
-              </motion.div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Stats Section */}
+      {/* Comics Gallery */}
+      <section id="comics" className="relative py-32 px-4">
+        <div className="max-w-7xl mx-auto">
+          <motion.h2
+            className="text-center mb-16"
+            initial={{ opacity: 0, rotateX: -90 }}
+            whileInView={{ opacity: 1, rotateX: 0 }}
+            viewport={{ once: true }}
+          >
+            LEGENDARY COMICS
+          </motion.h2>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {COMIC_COVERS.map((comic, index) => (
+              <motion.div
+                key={comic.id}
+                onClick={() => setLightboxImage({ image: comic.image, title: comic.title })}
+              >
+                <ComicCover comic={comic} index={index} />
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Interactive Stats Section */}
       <section className="relative py-32 px-4">
         <div className="max-w-6xl mx-auto">
           <motion.h2
@@ -444,44 +788,42 @@ function App() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            POWER STATS
+            BY THE NUMBERS
           </motion.h2>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
-              { label: 'Strength', value: 90, icon: '💪', color: '#E23636' },
-              { label: 'Speed', value: 95, icon: '⚡', color: '#F4D03F' },
-              { label: 'Intelligence', value: 98, icon: '🧠', color: '#2B378C' },
-              { label: 'Agility', value: 100, icon: '🤸', color: '#E23636' },
+              { label: 'Spider-People', value: 100, suffix: '+', icon: '🕷️', color: '#E23636' },
+              { label: 'Comic Issues', value: 2500, suffix: '+', icon: '📚', color: '#2B378C' },
+              { label: 'Movies', value: 11, suffix: '', icon: '🎬', color: '#F4D03F' },
+              { label: 'Years of Web', value: 62, suffix: '', icon: '🎂', color: '#E23636' },
             ].map((stat, index) => (
               <motion.div
                 key={stat.label}
-                className="suit-card rounded-lg p-6 text-center"
+                className="text-center"
                 initial={{ scale: 0, opacity: 0 }}
                 whileInView={{ scale: 1, opacity: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1, type: 'spring' }}
-                whileHover={{ scale: 1.05, rotate: index % 2 === 0 ? 3 : -3 }}
+                whileHover={{ scale: 1.1, rotate: index % 2 === 0 ? 5 : -5 }}
               >
                 <motion.div
-                  className="text-4xl mb-3"
-                  animate={{ rotate: [0, 10, -10, 0] }}
+                  className="text-6xl mb-4"
+                  animate={{ y: [0, -10, 0], rotate: [0, 10, -10, 0] }}
                   transition={{ duration: 2, repeat: Infinity, delay: index * 0.2 }}
                 >
                   {stat.icon}
                 </motion.div>
-                <h3 className="text-lg font-bold mb-2" style={{ fontFamily: 'Bangers' }}>{stat.label}</h3>
-                <div className="w-full h-4 bg-gray-800 rounded-full overflow-hidden">
-                  <motion.div
-                    className="h-full rounded-full"
-                    style={{ backgroundColor: stat.color }}
-                    initial={{ width: 0 }}
-                    whileInView={{ width: `${stat.value}%` }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 0.5 + index * 0.2, duration: 1, ease: 'easeOut' }}
-                  />
-                </div>
-                <p className="mt-2 text-2xl font-bold" style={{ color: stat.color }}>{stat.value}%</p>
+                <motion.p
+                  className="text-5xl font-bold mb-2"
+                  style={{ color: stat.color, fontFamily: 'Bangers' }}
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                >
+                  {stat.value}{stat.suffix}
+                </motion.p>
+                <p className="text-gray-400">{stat.label}</p>
               </motion.div>
             ))}
           </div>
@@ -489,15 +831,27 @@ function App() {
       </section>
 
       {/* Quote Section */}
-      <section className="relative py-32 px-4">
+      <section className="relative py-32 px-4 overflow-hidden">
         <motion.div
-          className="max-w-4xl mx-auto text-center"
+          className="max-w-4xl mx-auto text-center relative"
           initial={{ opacity: 0, scale: 0.8 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
         >
-          <div className="comic-panel p-12 transform rotate-1">
+          {/* Animated background shapes */}
+          <motion.div
+            className="absolute -left-20 top-0 w-40 h-40 bg-red-600/20 rounded-full blur-3xl"
+            animate={{ scale: [1, 1.5, 1], x: [0, 20, 0] }}
+            transition={{ duration: 4, repeat: Infinity }}
+          />
+          <motion.div
+            className="absolute -right-20 bottom-0 w-40 h-40 bg-blue-600/20 rounded-full blur-3xl"
+            animate={{ scale: [1, 1.5, 1], x: [0, -20, 0] }}
+            transition={{ duration: 4, repeat: Infinity, delay: 2 }}
+          />
+
+          <div className="comic-panel p-12 relative z-10">
             <motion.p
               className="text-3xl md:text-5xl font-bold text-black mb-6 glow-text"
               style={{ fontFamily: 'Changa One' }}
@@ -519,31 +873,25 @@ function App() {
             whileHover={{ scale: 1.2, rotate: 360 }}
             transition={{ duration: 0.5 }}
           >
-            <SpiderIcon className="mx-auto w-20 h-20" />
+            <span className="text-6xl">🕷️</span>
           </motion.div>
 
           <motion.p
-            className="text-gray-400 mb-4"
+            className="text-gray-400 mb-8"
             style={{ fontFamily: 'Comic Neue' }}
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
           >
-            This is a fan-made tribute to Spider-Man
+            A fan-made tribute to the Web-Slinger and the entire Spider-Verse
           </motion.p>
 
           <motion.div
-            className="flex justify-center gap-4"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            className="flex justify-center gap-6"
           >
-            {['🕷️', '🕸️', '🦸', '🏙️'].map((emoji, index) => (
+            {['🕷️', '🕸️', '🦸', '🏙️', '📱'].map((emoji, index) => (
               <motion.span
                 key={index}
-                className="text-3xl cursor-pointer"
+                className="text-4xl cursor-pointer"
                 whileHover={{ scale: 1.5, y: -10 }}
-                animate={{ y: [0, -5, 0] }}
+                animate={{ y: [0, -5, 0], rotate: [0, 5, -5, 0] }}
                 transition={{ delay: index * 0.1, duration: 1, repeat: Infinity }}
               >
                 {emoji}
@@ -552,6 +900,17 @@ function App() {
           </motion.div>
         </div>
       </footer>
+
+      {/* Lightbox Modal */}
+      <AnimatePresence>
+        {lightboxImage && (
+          <Lightbox
+            image={lightboxImage.image}
+            title={lightboxImage.title}
+            onClose={() => setLightboxImage(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }
